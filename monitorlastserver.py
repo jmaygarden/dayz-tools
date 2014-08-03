@@ -31,17 +31,19 @@ namePattern = re.compile('^\s*lastMPServerName\s*=\s*"(.*)"\s*;?\s*$')
 db = sqlite3.connect('dayz-tools.db')
 
 cursor = db.cursor()
-cursor.execute('CREATE TABLE IF NOT EXISTS server_log (date REAL, name TEXT, address TEXT, port INT)')
+cursor.execute('CREATE TABLE IF NOT EXISTS server_log (date REAL, name TEXT, address TEXT, port INT, PRIMARY KEY(address, port))')
 db.commit()
 
 cursor.execute('SELECT MAX(date) FROM server_log')
 t0 = cursor.fetchone()[0] or 0.0
 
+print 'Server history:'
 cursor.execute('SELECT * FROM server_log ORDER BY date')
 for record in cursor.fetchall():
     date, name, address, port = record
     date = datetime.datetime.fromtimestamp(date)
     print '%s: "%s", %s:%d' % (date, name, address, port)
+print ''
 
 def getlastserver(profile):
     name = ''
@@ -62,6 +64,7 @@ def getlastserver(profile):
 
     return (name, address, port)
 
+print 'Monitoring server changes...'
 while 1:
     t1 = os.stat(profile).st_mtime
     if t1 > t0:
